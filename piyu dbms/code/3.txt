@@ -1,0 +1,124 @@
+-- ✅ Create Database
+CREATE DATABASE EmployeeDB;
+USE EmployeeDB;
+
+-- ✅ Create Tables
+CREATE TABLE Locations (
+    location_id INT PRIMARY KEY,
+    street_address VARCHAR(100),
+    postal_code VARCHAR(20),
+    city VARCHAR(50),
+    state VARCHAR(50),
+    country_id VARCHAR(10)
+);
+
+CREATE TABLE Departments (
+    department_id INT PRIMARY KEY,
+    department_name VARCHAR(50),
+    manager_id INT,
+    location_id INT,
+    FOREIGN KEY (location_id) REFERENCES Locations(location_id)
+);
+
+CREATE TABLE Employee (
+    employee_id INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    hire_date DATE,
+    salary DECIMAL(10,2),
+    job_title VARCHAR(50),
+    manager_id INT,
+    department_id INT,
+    FOREIGN KEY (department_id) REFERENCES Departments(department_id)
+);
+
+-- ✅ Insert Sample Data
+INSERT INTO Locations VALUES
+(101, 'MG Road', '411001', 'Pune', 'Maharashtra', 'IN'),
+(102, 'Park Street', '700016', 'Kolkata', 'West Bengal', 'IN'),
+(103, 'Silicon Ave', '560001', 'Bangalore', 'Karnataka', 'IN'),
+(104, 'Broadway', '90001', 'New York', 'New York', 'US'),
+(105, 'Sunset Blvd', '90210', 'Los Angeles', 'California', 'US');
+
+INSERT INTO Departments VALUES
+(1, 'HR', 201, 101),
+(2, 'Finance', 202, 102),
+(3, 'IT', 203, 103),
+(4, 'Sales', 204, 104),
+(5, 'Marketing', 205, 105);
+
+INSERT INTO Employee VALUES
+(201, 'Amit', 'Sharma', '2018-04-10', 35000, 'Manager', NULL, 1),
+(202, 'Neha', 'Patil', '2019-07-15', 28000, 'Accountant', 201, 2),
+(203, 'Ravi', 'Singh', '2020-01-20', 30000, 'Team Lead', 201, 3),
+(204, 'Sneha', 'More', '2021-02-05', 25000, 'Developer', 203, 3),
+(205, 'Kiran', 'Joshi', '2020-06-22', 27000, 'Developer', 203, 3),
+(206, 'Rahul', 'Kale', '2021-05-11', 26000, 'Sales Rep', 204, 4),
+(207, 'Arjun', 'Verma', '2022-01-09', 24000, 'Sales Rep', 204, 4),
+(208, 'Pooja', 'Singh', '2022-09-14', 22000, 'HR Executive', 201, 1),
+(209, 'Ankit', 'Jones', '2019-10-10', 29000, 'Analyst', 202, 2),
+(210, 'Priya', 'Mehta', '2023-04-01', 40000, 'Manager', NULL, 5);
+
+-- ✅ 1. Names & salaries of employees who have higher salary than employee whose last_name='Singh'
+SELECT first_name, last_name, salary
+FROM Employee
+WHERE salary > (
+  SELECT salary FROM Employee WHERE last_name = 'Singh' LIMIT 1
+);
+
+-- ✅ 2. Names of employees who have a manager and work in a department based in the United States
+SELECT e.first_name, e.last_name
+FROM Employee e
+JOIN Departments d ON e.department_id = d.department_id
+JOIN Locations l ON d.location_id = l.location_id
+WHERE l.country_id = 'US' AND e.manager_id IS NOT NULL;
+
+-- ✅ 3. Names of employees who work in the IT department
+SELECT first_name, last_name
+FROM Employee e
+JOIN Departments d ON e.department_id = d.department_id
+WHERE d.department_name = 'IT';
+
+-- ✅ 4. Names & salaries of employees whose salary > average salary
+SELECT first_name, last_name, salary
+FROM Employee
+WHERE salary > (SELECT AVG(salary) FROM Employee);
+
+-- ✅ 5. Names & salaries of employees earning > average salary AND working in IT dept
+SELECT first_name, last_name, salary
+FROM Employee
+WHERE salary > (SELECT AVG(salary) FROM Employee)
+AND department_id IN (
+  SELECT department_id FROM Departments WHERE department_name = 'IT'
+);
+
+-- ✅ 6. Names & salaries of employees who earn same as minimum salary in all departments
+SELECT first_name, last_name, salary
+FROM Employee
+WHERE salary IN (SELECT MIN(salary) FROM Employee GROUP BY department_id);
+
+-- ✅ 7. Employee ID, name, and salary of employees whose salary is above average for their department
+SELECT e.employee_id, e.first_name, e.last_name, e.salary
+FROM Employee e
+WHERE e.salary > (
+  SELECT AVG(salary) FROM Employee WHERE department_id = e.department_id
+);
+
+-- ✅ 8. Employee ID, name, manager_id, and manager name
+SELECT e.employee_id, e.last_name AS Employee_Name, 
+       e.manager_id, m.last_name AS Manager_Name
+FROM Employee e
+LEFT JOIN Employee m ON e.manager_id = m.employee_id;
+
+-- ✅ 9. Names & hire date of employees hired after 'Jones'
+SELECT first_name, last_name, hire_date
+FROM Employee
+WHERE hire_date > (
+  SELECT hire_date FROM Employee WHERE last_name = 'Jones'
+);
+
+-- ✅ 10. Department name and number of employees in each department
+SELECT d.department_name, COUNT(e.employee_id) AS Total_Employees
+FROM Departments d
+LEFT JOIN Employee e ON d.department_id = e.department_id
+GROUP BY d.department_name;

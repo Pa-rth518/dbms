@@ -1,0 +1,31 @@
+CREATE TABLE Director (
+    Director_ID INT PRIMARY KEY,
+    Director_Name VARCHAR(100),
+    Experience INT
+);
+
+CREATE TABLE Movie (
+    Movie_ID INT PRIMARY KEY,
+    Title VARCHAR(100),
+    Release_Year YEAR,
+    Language VARCHAR(50),
+    Budget DECIMAL(15,2),
+    Director_ID INT,
+    FOREIGN KEY (Director_ID) REFERENCES Director(Director_ID)
+);
+
+CREATE TABLE Actor (
+    Actor_ID INT PRIMARY KEY,
+    Actor_Name VARCHAR(100),
+    Gender VARCHAR(10),
+    DOB DATE
+);
+
+CREATE TABLE Role (
+    Role_ID INT PRIMARY KEY,
+    Character_Name VARCHAR(100),
+    Movie_ID INT,
+    Actor_ID INT,
+    FOREIGN KEY (Movie_ID) REFERENCES Movie(Movie_ID),
+    FOREIGN KEY (Actor_ID) REFERENCES Actor(Actor_ID)
+);

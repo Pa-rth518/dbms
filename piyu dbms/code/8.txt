@@ -1,0 +1,89 @@
+// File: login.php (Save this file in your web server's root directory, e.g., 'htdocs')
+
+<?php
+// --- 1. Database Connection Details (Configuration) ---
+// Note: You must have MySQL running (e.g., via XAMPP/WAMP/MAMP) 
+// and a database/table setup for user accounts.
+$host = 'localhost';
+$username = 'your_mysql_username'; // <-- CHANGE THIS
+$password = 'your_mysql_password'; // <-- CHANGE THIS
+$database = 'your_user_database'; // <-- CHANGE THIS
+$user_table = 'Users';             // <-- CHANGE THIS to your table name
+
+$db_connection = mysqli_connect($host, $username, $password, $database);
+
+// Check if the connection was successful
+if (!$db_connection) {
+    // Implement database connection failure handling
+    die("Error connecting to MySQL server: " . mysqli_connect_error());
+}
+
+$login_message = "";
+
+// --- 2. Handle Form Submission (Database Navigation/Operation) ---
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $input_username = $_POST['username'];
+    $input_password = $_POST['password'];
+
+    // SQL Query to check user credentials (A basic READ/SELECT operation)
+    // NOTE: In a real app, passwords should be hashed! This is for lab purposes.
+    $sql = "SELECT username, password FROM $user_table WHERE username = ? AND password = ?";
+
+    // Use prepared statements for security (prevents SQL Injection)
+    $stmt = mysqli_prepare($db_connection, $sql);
+    mysqli_stmt_bind_param($stmt, "ss", $input_username, $input_password);
+    mysqli_stmt_execute($stmt);
+    
+    $result = mysqli_stmt_get_result($stmt);
+    
+    // Check if a row was returned (user found)
+    if (mysqli_num_rows($result) == 1) {
+        $login_message = "<p style='color: green;'>✅ Login Successful! Welcome, " . htmlspecialchars($input_username) . ".</p>";
+    } else {
+        $login_message = "<p style='color: red;'>❌ Invalid Username or Password.</p>";
+    }
+    
+    mysqli_stmt_close($stmt);
+}
+
+// --- 3. Close Connection (Best practice is to close after all operations) ---
+mysqli_close($db_connection); 
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DBMS Lab: PHP Login Page</title>
+</head>
+<body>
+
+    <h2>Assignment 8: Login Page in PHP (Database Connectivity)</h2>
+    
+    <?php echo $login_message; ?>
+
+    <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" name="username" required><br><br>
+        
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" required><br><br>
+        
+        <button type="submit">Login</button>
+    </form>
+
+    <p>
+        **Note:** This page demonstrates:
+        <ul>
+            <li>**Connectivity:** Establishing connection using `mysqli_connect()`.</li>
+            <li>**Operation:** Performing a SELECT query (`mysqli_query()` or `mysqli_prepare()`).</li>
+        </ul>
+        **Before running:** You must manually create the `Users` table and insert a user:
+        <br>
+        `CREATE TABLE Users (username VARCHAR(50) PRIMARY KEY, password VARCHAR(50));`
+        <br>
+        `INSERT INTO Users VALUES ('testuser', 'password123');`
+    </p>
+
+</body>
+</html>

@@ -1,0 +1,124 @@
+-- ✅ Enable output
+SET SERVEROUTPUT ON;
+
+------------------------------------------------------------
+-- 1️⃣ AUDIT TRIGGER (Library → Library_Audit)
+------------------------------------------------------------
+
+-- Drop old tables (optional)
+DROP TABLE Library_Audit;
+DROP TABLE Library;
+
+-- Create base table
+CREATE TABLE Library (
+    Book_ID NUMBER PRIMARY KEY,
+    Book_Name VARCHAR2(100),
+    Author VARCHAR2(50),
+    Price NUMBER
+);
+
+-- Create Audit table to store old values of updated/deleted records
+CREATE TABLE Library_Audit (
+    Book_ID NUMBER,
+    Book_Name VARCHAR2(100),
+    Author VARCHAR2(50),
+    Price NUMBER,
+    Action_Type VARCHAR2(20),
+    Action_Date DATE
+);
+
+-- Insert sample data
+INSERT INTO Library VALUES (1, 'DBMS Concepts', 'Navathe', 650);
+INSERT INTO Library VALUES (2, 'Operating System', 'Galvin', 720);
+INSERT INTO Library VALUES (3, 'Networks', 'Tanenbaum', 800);
+COMMIT;
+
+-- ✅ Trigger to track updates or deletions
+CREATE OR REPLACE TRIGGER trg_Library_Audit
+BEFORE UPDATE OR DELETE ON Library
+FOR EACH ROW
+BEGIN
+    IF UPDATING THEN
+        INSERT INTO Library_Audit
+        VALUES(:OLD.Book_ID, :OLD.Book_Name, :OLD.Author, :OLD.Price, 'UPDATED', SYSDATE);
+        DBMS_OUTPUT.PUT_LINE('Updated record stored in Library_Audit.');
+    ELSIF DELETING THEN
+        INSERT INTO Library_Audit
+        VALUES(:OLD.Book_ID, :OLD.Book_Name, :OLD.Author, :OLD.Price, 'DELETED', SYSDATE);
+        DBMS_OUTPUT.PUT_LINE('Deleted record stored in Library_Audit.');
+    END IF;
+END;
+/
+SHOW ERRORS;
+
+-- ✅ Test Update and Delete
+UPDATE Library SET Price = 950 WHERE Book_ID = 1;
+DELETE FROM Library WHERE Book_ID = 2;
+COMMIT;
+
+-- ✅ Check Results
+SELECT * FROM Library;
+SELECT * FROM Library_Audit;
+
+------------------------------------------------------------
+-- 2️⃣ BEFORE TRIGGER (Emp → Tracking)
+------------------------------------------------------------
+
+-- Drop old tables if exist
+DROP TABLE Tracking;
+DROP TABLE Emp;
+
+-- Create Employee table
+CREATE TABLE Emp (
+    e_no NUMBER PRIMARY KEY,
+    e_name VARCHAR2(50),
+    salary NUMBER
+);
+
+-- Create Tracking table
+CREATE TABLE Tracking (
+    e_no NUMBER,
+    salary NUMBER,
+    Date_Time DATE
+);
+
+-- ✅ Create BEFORE Trigger for INSERT & UPDATE validation
+CREATE OR REPLACE TRIGGER trg_salary_check
+BEFORE INSERT OR UPDATE ON Emp
+FOR EACH ROW
+DECLARE
+BEGIN
+    -- Store attempt in tracking table
+    INSERT INTO Tracking VALUES(:NEW.e_no, :NEW.salary, SYSDATE);
+
+    -- Reject salary below 50,000
+    IF :NEW.salary < 50000 THEN
+        RAISE_APPLICATION_ERROR(-20001, '❌ Salary cannot be less than 50,000. Operation rejected!');
+    END IF;
+END;
+/
+SHOW ERRORS;
+
+-- ✅ Test Trigger
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Testing INSERT ---');
+    INSERT INTO Emp VALUES (101, 'Amit', 60000);  -- Valid
+    INSERT INTO Emp VALUES (102, 'Neha', 45000);  -- Should fail
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE(SQLERRM);
+END;
+/
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Testing UPDATE ---');
+    UPDATE Emp SET salary = 40000 WHERE e_no = 101; -- Should fail
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE(SQLERRM);
+END;
+/
+
+-- ✅ Check Final Data
+SELECT * FROM Emp;
+SELECT * FROM Tracking;

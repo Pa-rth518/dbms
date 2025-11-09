@@ -1,0 +1,115 @@
+-- ✅ Create Database
+CREATE DATABASE CompanyDB;
+USE CompanyDB;
+
+-- ✅ Create Employee Table
+CREATE TABLE Employee (
+    Employee_id INT PRIMARY KEY,
+    First_name VARCHAR(50),
+    Last_name VARCHAR(50),
+    Salary DECIMAL(10,2),
+    Joining_date DATE,
+    Department VARCHAR(50)
+);
+
+-- ✅ Insert 10–15 Records
+INSERT INTO Employee VALUES
+(101, 'Amit', 'Patil', 18000, '2021-04-20', 'IT'),
+(102, 'Neha', 'Sharma', 25000, '2022-03-15', 'HR'),
+(103, 'Raj', 'Kumar', 22000, '2020-01-10', 'Finance'),
+(104, 'Sneha', 'More', 28000, '2021-06-01', 'IT'),
+(105, 'Arjun', 'Singh', 15000, '2019-02-12', 'Sales'),
+(106, 'Kiran', 'Patel', 19000, '2020-11-11', 'HR'),
+(107, 'Priya', 'Yadav', 31000, '2021-08-09', 'Finance'),
+(108, 'Ravi', 'Nair', 20000, '2018-05-19', 'Sales'),
+(109, 'Aman', 'Kale', 27000, '2023-07-01', 'IT'),
+(110, 'Divya', 'Joshi', 23000, '2022-09-14', 'Finance'),
+(111, 'Anjali', 'Deshmukh', 26000, '2020-04-22', 'Marketing'),
+(112, 'Sagar', 'Jadhav', 19500, '2021-02-03', 'Sales');
+
+-- ✅ 1. Get First_Name, Last_Name
+SELECT First_name, Last_name FROM Employee;
+
+-- ✅ 2. Get Unique Departments
+SELECT DISTINCT Department FROM Employee;
+
+-- ✅ 3. Get First_Name, Joining Year, Month, and Date
+SELECT 
+  First_name,
+  YEAR(Joining_date) AS Joining_Year,
+  MONTH(Joining_date) AS Joining_Month,
+  DAY(Joining_date) AS Joining_Day
+FROM Employee;
+
+-- ✅ 4. Get All Employees Ordered by Salary (Ascending)
+SELECT * FROM Employee ORDER BY Salary ASC;
+
+-- ✅ 5. Get All Employees whose First_Name starts with 'A'
+SELECT * FROM Employee WHERE First_name LIKE 'A%';
+
+-- ✅ 6. Update Salary by +5000 for all employees having salary < 20000
+UPDATE Employee
+SET Salary = Salary + 5000
+WHERE Salary < 20000;
+
+-- ✅ 7. Delete Department of Employee No. 104
+UPDATE Employee
+SET Department = NULL
+WHERE Employee_id = 104;
+
+-- ✅ 8. Find Department-wise Minimum Salary
+SELECT Department, MIN(Salary) AS Min_Salary
+FROM Employee
+GROUP BY Department;
+
+-- ✅ 9. Find Department-wise Average Salary (Ascending)
+SELECT Department, AVG(Salary) AS Avg_Salary
+FROM Employee
+GROUP BY Department
+ORDER BY Avg_Salary ASC;
+
+-- ✅ 10. Create Another Table for Set Operations
+CREATE TABLE EmpDetails (
+    Employee_id INT,
+    Employee_name VARCHAR(50),
+    City VARCHAR(50),
+    Company_Name VARCHAR(50),
+    Salary DECIMAL(10,2)
+);
+
+-- ✅ Insert Data into EmpDetails
+INSERT INTO EmpDetails VALUES
+(201, 'Amit', 'Pune', 'IBM', 25000),
+(202, 'Ravi', 'Mumbai', 'IBM', 32000),
+(203, 'Neha', 'Pune', 'Infosys', 28000),
+(204, 'Raj', 'Delhi', 'Infosys', 35000),
+(205, 'Sneha', 'Pune', 'TCS', 40000),
+(206, 'Arjun', 'Bangalore', 'IBM', 31000),
+(207, 'Divya', 'Pune', 'Infosys', 23000),
+(208, 'Priya', 'Mumbai', 'Wipro', 33000);
+
+-- ✅ 11. Employees who work for “IBM” and live in “Pune”
+SELECT * FROM EmpDetails
+WHERE Company_Name = 'IBM' AND City = 'Pune';
+
+-- ✅ 12. Names & Cities of Employees who work for “Infosys” OR earn > 30000
+SELECT Employee_name, City
+FROM EmpDetails
+WHERE Company_Name = 'Infosys' OR Salary > 30000;
+
+-- ✅ 13. Employees of “IBM” who are NOT living in “Mumbai”
+SELECT * FROM EmpDetails
+WHERE Company_Name = 'IBM' AND City <> 'Mumbai';
+
+-- ✅ 14. Company-wise Maximum Salary
+SELECT Company_Name, MAX(Salary) AS Max_Salary
+FROM EmpDetails
+GROUP BY Company_Name;
+
+-- ✅ 15. Companies whose Employees earn higher than Average Salary of “IBM”
+SELECT Company_Name, AVG(Salary) AS Avg_Salary
+FROM EmpDetails
+GROUP BY Company_Name
+HAVING AVG(Salary) > (
+  SELECT AVG(Salary) FROM EmpDetails WHERE Company_Name = 'IBM'
+);

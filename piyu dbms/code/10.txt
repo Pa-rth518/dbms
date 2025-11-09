@@ -1,0 +1,91 @@
+------------------------------------------------------------
+--  AGGREGATION AND INDEXING IN MONGODB
+------------------------------------------------------------
+
+-- Step 1: Create / Switch to Database
+> use salesDB
+
+-- Step 2: Create Collection and Insert Documents
+> db.sales.insertMany([
+    { _id: 1, state: "Maharashtra", city: "Pune", sales: 12000, quantity: 20 },
+    { _id: 2, state: "Maharashtra", city: "Mumbai", sales: 18000, quantity: 35 },
+    { _id: 3, state: "Gujarat", city: "Surat", sales: 15000, quantity: 25 },
+    { _id: 4, state: "Gujarat", city: "Ahmedabad", sales: 20000, quantity: 40 },
+    { _id: 5, state: "Madhya Pradesh", city: "Indore", sales: 8000, quantity: 10 }
+])
+
+------------------------------------------------------------
+-- 1️⃣ AGGREGATION OPERATIONS
+------------------------------------------------------------
+
+-- (A) Find total sales (sum) per state
+> db.sales.aggregate([
+    { $group: { _id: "$state", totalSales: { $sum: "$sales" } } }
+])
+
+-- (B) Find average quantity per state
+> db.sales.aggregate([
+    { $group: { _id: "$state", avgQty: { $avg: "$quantity" } } }
+])
+
+-- (C) Find minimum and maximum sales per state
+> db.sales.aggregate([
+    { $group: { _id: "$state", minSale: { $min: "$sales" }, maxSale: { $max: "$sales" } } }
+])
+
+-- (D) Filter states having totalSales >= 15000
+> db.sales.aggregate([
+    { $group: { _id: "$state", totalSales: { $sum: "$sales" } } },
+    { $match: { totalSales: { $gte: 15000 } } }
+])
+
+-- (E) Sort states by total sales (descending)
+> db.sales.aggregate([
+    { $group: { _id: "$state", totalSales: { $sum: "$sales" } } },
+    { $sort: { totalSales: -1 } }
+])
+
+------------------------------------------------------------
+-- 2️⃣ INDEXING OPERATIONS
+------------------------------------------------------------
+
+-- (A) Create a simple ascending index on "state"
+> db.sales.createIndex({ state: 1 })
+
+-- (B) Create a descending index on "sales"
+> db.sales.createIndex({ sales: -1 })
+
+-- (C) Create a compound index (state + city)
+> db.sales.createIndex({ state: 1, city: 1 })
+
+-- (D) Create a unique index on city
+> db.sales.createIndex({ city: 1 }, { unique: true })
+
+-- (E) Create a sparse unique index (for missing fields)
+> db.sales.createIndex({ region: 1 }, { unique: true, sparse: true })
+
+-- (F) Create a hashed index (useful for sharding)
+> db.sales.createIndex({ _id: "hashed" })
+
+-- (G) Check all existing indexes
+> db.sales.getIndexes()
+
+-- (H) Drop a specific index
+> db.sales.dropIndex({ sales: -1 })
+
+------------------------------------------------------------
+-- 3️⃣ SAMPLE OUTPUT (REFERENCE)
+------------------------------------------------------------
+> db.sales.aggregate([{ $group: { _id: "$state", totalSales: { $sum: "$sales" } } }])
+{ "_id" : "Madhya Pradesh", "totalSales" : 8000 }
+{ "_id" : "Gujarat", "totalSales" : 35000 }
+{ "_id" : "Maharashtra", "totalSales" : 30000 }
+
+> db.sales.createIndex({ state: 1 })
+{
+  "numIndexesBefore" : 1,
+  "numIndexesAfter" : 2,
+  "createdCollectionAutomatically" : false,
+  "ok" : 1
+}
+------------------------------------------------------------

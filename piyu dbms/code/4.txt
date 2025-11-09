@@ -1,0 +1,79 @@
+-- ✅ Enable Output
+SET SERVEROUTPUT ON;
+
+-- ✅ Create Tables
+CREATE TABLE Borrower (
+    Rollin NUMBER PRIMARY KEY,
+    Name VARCHAR2(50),
+    DateofIssue DATE,
+    NameofBook VARCHAR2(100),
+    Status CHAR(1)
+);
+
+CREATE TABLE Fine (
+    Rollin NUMBER,
+    NameofBook VARCHAR2(100),
+    FineAmount NUMBER,
+    DaysLate NUMBER
+);
+
+-- ✅ Insert Sample Data
+INSERT INTO Borrower VALUES (101, 'Amit', SYSDATE - 20, 'DBMS', 'I');
+INSERT INTO Borrower VALUES (102, 'Neha', SYSDATE - 35, 'CN', 'I');
+INSERT INTO Borrower VALUES (103, 'Raj', SYSDATE - 10, 'AI', 'I');
+COMMIT;
+
+-- ✅ PL/SQL Block
+DECLARE
+    v_rollin Borrower.Rollin%TYPE := &Enter_Rollin;
+    v_book Borrower.NameofBook%TYPE := '&Enter_Book_Name';
+    v_days NUMBER;
+    v_fine NUMBER := 0;
+    v_date DATE;
+BEGIN
+    -- Fetch Date of Issue
+    SELECT DateofIssue INTO v_date
+    FROM Borrower
+    WHERE Rollin = v_rollin AND NameofBook = v_book;
+
+    -- Calculate Days Difference
+    v_days := TRUNC(SYSDATE - v_date);
+
+    -- Calculate Fine Based on Days
+    IF v_days BETWEEN 15 AND 30 THEN
+        v_fine := v_days * 5;
+    ELSIF v_days > 30 THEN
+        v_fine := v_days * 50;
+    ELSE
+        v_fine := 0;
+    END IF;
+
+    -- Display Details
+    DBMS_OUTPUT.PUT_LINE('Roll No: ' || v_rollin);
+    DBMS_OUTPUT.PUT_LINE('Book Name: ' || v_book);
+    DBMS_OUTPUT.PUT_LINE('Days Late: ' || v_days);
+    DBMS_OUTPUT.PUT_LINE('Fine Amount: Rs ' || v_fine);
+
+    -- Update Status from 'I' to 'R'
+    UPDATE Borrower
+    SET Status = 'R'
+    WHERE Rollin = v_rollin AND NameofBook = v_book;
+
+    -- If Fine Exists, Insert Into Fine Table
+    IF v_fine > 0 THEN
+        INSERT INTO Fine VALUES (v_rollin, v_book, v_fine, v_days);
+        DBMS_OUTPUT.PUT_LINE('Fine details added successfully.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('No fine applicable.');
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('❌ No record found for entered Roll No or Book Name.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('⚠️ Error: ' || SQLERRM);
+        ROLLBACK;
+END;
+/

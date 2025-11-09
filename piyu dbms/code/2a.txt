@@ -1,0 +1,83 @@
+-- 1️⃣ Create Database
+CREATE DATABASE CollegeDB;
+USE CollegeDB;
+
+-- 2️⃣ Create Tables
+CREATE TABLE Student (
+    StudID INT,
+    Name VARCHAR(50),
+    Address VARCHAR(100),
+    Marks INT
+);
+
+CREATE TABLE Employee (
+    EmployeeID INT,
+    Name VARCHAR(50),
+    Address VARCHAR(100),
+    Salary DECIMAL(10,2),
+    DateOfJoining DATE,
+    Department VARCHAR(50)
+);
+
+CREATE TABLE Weather (
+    CityID INT,
+    CityName VARCHAR(50),
+    MinTemp DECIMAL(5,2),
+    MaxTemp DECIMAL(5,2)
+);
+
+-- 3️⃣ Alter tables to add NOT NULL constraint
+ALTER TABLE Student
+MODIFY StudID INT NOT NULL,
+MODIFY Name VARCHAR(50) NOT NULL,
+MODIFY Address VARCHAR(100) NOT NULL,
+MODIFY Marks INT NOT NULL;
+
+ALTER TABLE Employee
+MODIFY EmployeeID INT NOT NULL,
+MODIFY Name VARCHAR(50) NOT NULL,
+MODIFY Address VARCHAR(100) NOT NULL,
+MODIFY Salary DECIMAL(10,2) NOT NULL,
+MODIFY DateOfJoining DATE NOT NULL,
+MODIFY Department VARCHAR(50) NOT NULL;
+
+-- 4️⃣ Add Primary Key to Student
+ALTER TABLE Student
+ADD PRIMARY KEY (StudID);
+
+-- 5️⃣ Create View on Employee
+CREATE VIEW JoiningInfo AS
+SELECT EmployeeID, Name, DateOfJoining
+FROM Employee;
+
+-- 6️⃣ Create Index on Primary Key columns
+CREATE INDEX idx_student_id ON Student(StudID);
+CREATE INDEX idx_employee_id ON Employee(EmployeeID);
+CREATE INDEX idx_weather_id ON Weather(CityID);
+
+-- 7️⃣ Create View on Student for Marks Info
+CREATE VIEW MarksInfo AS
+SELECT StudID, Marks
+FROM Student;
+
+-- 8️⃣ Rename Weather table
+RENAME TABLE Weather TO WeatherData;
+
+-- 9️⃣ Drop column CityName from WeatherData
+ALTER TABLE WeatherData DROP COLUMN CityName;
+
+-- 🔟 Add column Grade to Student table
+ALTER TABLE Student ADD Grade VARCHAR(20);
+
+-- 11️⃣ Create View “DistinctionStudents” (students having Distinction grade)
+CREATE VIEW DistinctionStudents AS
+SELECT * FROM Student
+WHERE Grade = 'Distinction';
+
+-- 12️⃣ Create Sequence for StudID (for AUTO_INCREMENT)
+ALTER TABLE Student MODIFY StudID INT AUTO_INCREMENT;
+
+-- 13️⃣ Create Synonym (NOTE: MySQL doesn’t directly support Synonym like Oracle)
+-- For demonstration, we can create a VIEW as alias for Employee
+CREATE VIEW Emp_Info AS
+SELECT * FROM Employee;

@@ -1,0 +1,75 @@
+------------------------------------------------------------
+--  STUDY OF OPEN SOURCE NOSQL DATABASE: MONGODB
+--  Full Practical Code (Installation + CRUD Operations)
+------------------------------------------------------------
+
+-- Step 1: Create / Switch to Database
+> use studentDB
+
+-- Step 2: Create Collection
+> db.createCollection("student")
+
+-- Step 3: Insert Single Document
+> db.student.insert({name: "Amit", roll_no: 101, course: "DBMS", marks: 85})
+
+-- Step 4: Insert Multiple Documents
+> db.student.insertMany([
+    {name: "Neha", roll_no: 102, course: "CN", marks: 90},
+    {name: "Raj", roll_no: 103, course: "AI", marks: 88},
+    {name: "Priya", roll_no: 104, course: "DBMS", marks: 91}
+])
+
+-- Step 5: Display All Documents
+> db.student.find()
+
+-- Step 6: Display All Documents (Formatted)
+> db.student.find().pretty()
+
+-- Step 7: Search Specific Record (Read Operation)
+> db.student.find({name: "Neha"}).pretty()
+
+-- Step 8: Update Single Record
+> db.student.update(
+    {roll_no: 101},
+    {$set: {marks: 95}}
+)
+
+-- Step 9: Update Multiple Records
+> db.student.updateMany(
+    {course: "DBMS"},
+    {$set: {marks: 99}}
+)
+
+-- Step 10: Verify Updates
+> db.student.find().pretty()
+
+-- Step 11: Delete Single Record
+> db.student.deleteOne({name: "Raj"})
+
+-- Step 12: Delete Multiple Records
+> db.student.deleteMany({course: "DBMS"})
+
+-- Step 13: Drop Collection
+> db.student.drop()
+
+-- Step 14: Drop Database
+> db.dropDatabase()
+
+------------------------------------------------------------
+-- OUTPUT SAMPLE (for reference)
+------------------------------------------------------------
+> use studentDB
+switched to db studentDB
+
+> db.student.insert({name: "Amit", roll_no: 101, course: "DBMS", marks: 85})
+WriteResult({ "nInserted" : 1 })
+
+> db.student.find().pretty()
+{
+    "_id" : ObjectId("64c7d23a0f5c"),
+    "name" : "Amit",
+    "roll_no" : 101,
+    "course" : "DBMS",
+    "marks" : 85
+}
+------------------------------------------------------------

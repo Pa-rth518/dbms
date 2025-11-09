@@ -1,0 +1,112 @@
+-- ✅ Enable Output
+SET SERVEROUTPUT ON;
+
+-- ✅ Drop existing tables (optional)
+DROP TABLE N_RollCall;
+DROP TABLE O_RollCall;
+
+-- ✅ Create Tables
+CREATE TABLE N_RollCall (
+    RollNo NUMBER PRIMARY KEY,
+    Name VARCHAR2(50),
+    Att_Date DATE,
+    Attendance CHAR(1)
+);
+
+CREATE TABLE O_RollCall (
+    RollNo NUMBER PRIMARY KEY,
+    Name VARCHAR2(50),
+    Att_Date DATE,
+    Attendance CHAR(1)
+);
+
+-- ✅ Insert Sample Data
+INSERT INTO N_RollCall VALUES (101, 'Amit', SYSDATE, 'P');
+INSERT INTO N_RollCall VALUES (102, 'Neha', SYSDATE, 'A');
+INSERT INTO N_RollCall VALUES (103, 'Raj', SYSDATE, 'P');
+INSERT INTO O_RollCall VALUES (101, 'Amit', SYSDATE, 'P'); -- already exists
+COMMIT;
+
+---------------------------------------------------------------
+-- ✅ 1️⃣ Implicit Cursor Example
+---------------------------------------------------------------
+BEGIN
+    UPDATE O_RollCall
+    SET Attendance = 'P'
+    WHERE RollNo = 102;
+
+    IF SQL%FOUND THEN
+        DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT || ' record(s) updated using Implicit Cursor.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('No record found to update.');
+    END IF;
+END;
+/
+
+---------------------------------------------------------------
+-- ✅ 2️⃣ Explicit Cursor Example
+---------------------------------------------------------------
+DECLARE
+    CURSOR c_all IS SELECT RollNo, Name FROM N_RollCall;
+    v_roll N_RollCall.RollNo%TYPE;
+    v_name N_RollCall.Name%TYPE;
+BEGIN
+    OPEN c_all;
+    LOOP
+        FETCH c_all INTO v_roll, v_name;
+        EXIT WHEN c_all%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Explicit Cursor → RollNo: ' || v_roll || ', Name: ' || v_name);
+    END LOOP;
+    CLOSE c_all;
+END;
+/
+
+---------------------------------------------------------------
+-- ✅ 3️⃣ Cursor FOR Loop Example
+---------------------------------------------------------------
+DECLARE
+    CURSOR c_for IS SELECT * FROM N_RollCall;
+BEGIN
+    FOR rec IN c_for LOOP
+        DBMS_OUTPUT.PUT_LINE('FOR LOOP Cursor → Roll: ' || rec.RollNo || ', Name: ' || rec.Name);
+    END LOOP;
+END;
+/
+
+---------------------------------------------------------------
+-- ✅ 4️⃣ Parameterized Cursor Example (Main Question)
+---------------------------------------------------------------
+DECLARE
+    -- Parameterized Cursor to fetch one record from N_RollCall by RollNo
+    CURSOR cur_merge(p_roll NUMBER) IS
+        SELECT RollNo, Name, Att_Date, Attendance
+        FROM N_RollCall
+        WHERE RollNo = p_roll;
+
+    v_exists NUMBER;
+BEGIN
+    FOR rec IN (SELECT RollNo FROM N_RollCall) LOOP
+        -- Check if record already exists in O_RollCall
+        SELECT COUNT(*) INTO v_exists
+        FROM O_RollCall
+        WHERE RollNo = rec.RollNo;
+
+        IF v_exists = 0 THEN
+            -- Fetch data using Parameterized Cursor
+            FOR c IN cur_merge(rec.RollNo) LOOP
+                INSERT INTO O_RollCall VALUES (c.RollNo, c.Name, c.Att_Date, c.Attendance);
+                DBMS_OUTPUT.PUT_LINE('Inserted RollNo: ' || c.RollNo || ' → ' || c.Name);
+            END LOOP;
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('Skipped duplicate RollNo: ' || rec.RollNo);
+        END IF;
+    END LOOP;
+
+    COMMIT;
+END;
+/
+
+---------------------------------------------------------------
+-- ✅ View Final Data
+---------------------------------------------------------------
+SELECT * FROM O_RollCall;
